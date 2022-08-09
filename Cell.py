@@ -422,10 +422,10 @@ class Cell:
         csv_reader = csv.reader(csv_file, dialect='unix')
         for row in csv_reader: # there's only one row, but this extracts it
             self.m_sat[i], self.sigma_sat[i], self.lam_sat[i] = float(row[0]), float(row[1]), float(row[2])
-            self.target_alt[i], self.up_time[i], self.alpha_S[i] = float(row[3]), float(row[4]), float(row[5])
-            self.alpha_D[i], self.alpha_N[i], self.alpha_R[i] = float(row[6]), float(row[7]), float(row[8])
-            self.P[i], self.AM_sat[i], self.tau_sat[i] = float(row[9]), float(row[10]), float(row[11])
-            self.C_sat[i], self.expl_rate_L[i], self.expl_rate_D[i] = float(row[12]), float(row[13]), float(row[14])
+            self.alpha_S[i], self.alpha_D[i], self.alpha_N[i] = float(row[3]), float(row[4]), float(row[5])
+            self.alpha_R[i], self.P[i], self.AM_sat[i] = float(row[6]), float(row[7]), float(row[8])
+            self.tau_sat[i], self.C_sat[i], self.expl_rate_L[i] = float(row[9]), float(row[10]), float(row[11])
+            self.expl_rate_D[i] = float(row[12])
         csv_file.close()
 
         # load data
