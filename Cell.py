@@ -123,7 +123,7 @@ class Cell:
 
         # parameters for dxdt calculations
         sigma1_2d = np.resize(self.sigma_sat_km, (self.num_sat_types, self.num_sat_types))
-        sigma2_2d = self.sigma1_2d_satsat.transpose()
+        sigma2_2d = sigma1_2d.transpose()
         self.sigma_comb_satsat = sigma1_2d + sigma2_2d + 2*np.sqrt(sigma1_2d*sigma2_2d) # account for increased cross-section
         self.alphaS1 = np.resize(self.alpha_S, (self.num_sat_types, self.num_sat_types))
         self.alphaS2 = self.alphaS1.transpose()
@@ -381,7 +381,7 @@ class Cell:
 
         # parameters for dxdt calculations
         sigma1_2d = np.resize(cell.sigma_sat_km, (cell.num_sat_types, cell.num_sat_types))
-        sigma2_2d = cell.sigma1_2d_satsat.transpose()
+        sigma2_2d = sigma1_2d.transpose()
         cell.sigma_comb_satsat = sigma1_2d + sigma2_2d + 2*np.sqrt(sigma1_2d*sigma2_2d) # account for increased cross-section
         cell.alphaS1 = np.resize(cell.alpha_S, (cell.num_sat_types, cell.num_sat_types))
         cell.alphaS2 = cell.alphaS1.transpose()
