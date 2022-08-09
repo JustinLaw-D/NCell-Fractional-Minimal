@@ -12,14 +12,13 @@ Re = 6371 # radius of Earth (km)
 
 class Cell:
     
-    def __init__(self, S_i, S_di, D_i, R_i, N_i, logL_edges, chi_edges, event_list, alt, dh, tau_N, v, m_sat, sigma_sat,
-                 del_t, lam_sat, tau_do, alpha_S, alpha_D, alpha_N, alpha_R, P, AM_sat, tau_sat, C_sat, expl_rate_L, 
+    def __init__(self, S_i, D_i, R_i, N_i, logL_edges, chi_edges, event_list, alt, dh, tau_N, v, m_sat, sigma_sat,
+                 del_t, lam_sat, alpha_S, alpha_D, alpha_N, alpha_R, P, AM_sat, tau_sat, C_sat, expl_rate_L, 
                  expl_rate_D, m_rb, sigma_rb, lam_rb, AM_rb, tau_rb, C_rb, expl_rate_R):
         '''Constructor for Cell class
     
         Parameter(s):
         S_i : list of initial live satellite values for each satellite type
-        S_di : list of initial de-orbiting satellite values for each satellite type
         D_i : list of initial derelict satellite values for each satellite type
         R_i : list of initial number of rocket bodies of each type
         N_i : initial array of number of debris by L and A/M
@@ -34,7 +33,6 @@ class Cell:
         sigma_sat : collision cross-section of each satellite type (m^2)
         del_t : mean satellite lifetime of each type (yr)
         lam_sat : launch rate of satellites of each type into the band (1/yr)
-        tau_do : mean time for satellites of each type to de-orbit from shell (yr)
         alpha_S : the fraction of collisions a live satellite of each type fails to avoid with a live satellite
         alpha_D : the fraction of collisions a live satellite of each type fails to avoid with a derelict satellite
         alpha_N : the fraction of collisions a live satellite of each type fails to avoid with trackable debris
@@ -64,14 +62,12 @@ class Cell:
         self.num_sat_types = len(S_i)
         self.num_rb_types = len(R_i)
         self.S = [S_i]
-        self.S_d = [S_di]
         self.D = [D_i]
         self.m_sat = m_sat
         self.sigma_sat = sigma_sat
         self.sigma_sat_km = self.sigma_sat/1e6 # same thing, but in km^2
         self.del_t = del_t
         self.lam_sat = lam_sat
-        self.tau_do = tau_do
         self.alpha_S = alpha_S
         self.alpha_D = alpha_D
         self.alpha_R = alpha_R
@@ -215,23 +211,21 @@ class Cell:
         # save parameters
         csv_file = open(filepath + 'params.csv', 'w', newline='')
         csv_writer = csv.writer(csv_file, dialect='unix')
-        csv_writer.writerow([self.m_sat[i], self.sigma_sat[i], self.del_t[i], self.lam_sat[i], self.tau_do[i], 
+        csv_writer.writerow([self.m_sat[i], self.sigma_sat[i], self.del_t[i], self.lam_sat[i], 
                              self.alpha_S[i], self.alpha_D[i], self.alpha_N[i], self.alpha_R[i], self.P[i], 
                              self.AM_sat[i], self.tau_sat[i], self.C_sat[i], self.expl_rate_L[i], self.expl_rate_D[i]])
         csv_file.close()
 
         # save data
         S_array = np.empty(filter_len, dtype=np.double)
-        Sd_array = np.empty(filter_len, dtype=np.double)
         D_array = np.empty(filter_len, dtype=np.double)
         index = 0
         for j in range(len(self.S)):
             if filter[j]:
                 S_array[index] = self.S[j][i]
-                Sd_array[index] = self.S_d[j][i]
                 D_array[index] = self.D[j][i]
                 index += 1
-        to_save = {'S' : S_array, 'S_d' : Sd_array, 'D' : D_array}
+        to_save = {'S' : S_array, 'D' : D_array}
         np.savez_compressed(filepath + "data.npz", **to_save)
     
     def save_rb(self, filepath, filter, filter_len, i):
@@ -337,18 +331,15 @@ class Cell:
 
         # setup variables for satellites
         cell.S = []
-        cell.S_d = []
         cell.D = []
         tot_num_data = len(cell.N_bins) # number of time data points
         for i in range(tot_num_data):
             cell.S.append(np.empty(cell.num_sat_types, dtype=np.double))
-            cell.S_d.append(np.empty(cell.num_sat_types, dtype=np.double))
             cell.D.append(np.empty(cell.num_sat_types, dtype=np.double))
         cell.m_sat = np.empty(cell.num_sat_types, dtype=np.double)
         cell.sigma_sat = np.empty(cell.num_sat_types, dtype=np.double)
         cell.del_t = np.empty(cell.num_sat_types, dtype=np.double)
         cell.lam_sat = np.empty(cell.num_sat_types, dtype=np.double)
-        cell.tau_do = np.empty(cell.num_sat_types, dtype=np.double)
         cell.alpha_S = np.empty(cell.num_sat_types, dtype=np.double)
         cell.alpha_D = np.empty(cell.num_sat_types, dtype=np.double)
         cell.alpha_N = np.empty(cell.num_sat_types, dtype=np.double)
@@ -431,21 +422,18 @@ class Cell:
         csv_reader = csv.reader(csv_file, dialect='unix')
         for row in csv_reader: # there's only one row, but this extracts it
             self.m_sat[i], self.sigma_sat[i], self.lam_sat[i] = float(row[0]), float(row[1]), float(row[2])
-            self.tau_do[i], self.target_alt[i], self.up_time[i] = float(row[3]), float(row[4]), float(row[5])
-            self.alpha_S[i], self.alpha_D[i], self.alpha_N[i] = float(row[6]), float(row[7]), float(row[8])
-            self.alpha_R[i], self.P[i], self.AM_sat[i] = float(row[9]), float(row[10]), float(row[11])
-            self.tau_sat[i], self.C_sat[i], self.expl_rate_L[i] = float(row[12]), float(row[13]), float(row[14])
-            self.expl_rate_D[i] = float(row[15])
+            self.target_alt[i], self.up_time[i], self.alpha_S[i] = float(row[3]), float(row[4]), float(row[5])
+            self.alpha_D[i], self.alpha_N[i], self.alpha_R[i] = float(row[6]), float(row[7]), float(row[8])
+            self.P[i], self.AM_sat[i], self.tau_sat[i] = float(row[9]), float(row[10]), float(row[11])
+            self.C_sat[i], self.expl_rate_L[i], self.expl_rate_D[i] = float(row[12]), float(row[13]), float(row[14])
         csv_file.close()
 
         # load data
         data_dict = np.load(filepath + "data.npz")
         S_sat = data_dict['S']
         D_sat = data_dict['D']
-        Sd_sat = data_dict['S_d']
         for j in range(S_sat.size):
             self.S[j][i] = S_sat[j]
-            self.S_d[j][i] = Sd_sat[j]
             self.D[j][i] = D_sat[j]
 
     def load_rb(self, filepath, i):
@@ -490,12 +478,9 @@ class Cell:
         Output(s):
         dSdt : array of rate of change of the number of live satellites in the cell of each type due to only processes
                withing the cell (yr^(-1))
-        dS_ddt : array of rate of change of the number of de-orbiting satellites in the cell of each type
-                 (excluding satellites de-orbiting) (yr^(-1))
         dDdt : array of rate of change of the number of derelict satellites in the cell of each type
                (excluding derelicts decaying) (yr^(-1))
         dRdt : array of rate of change of number of rocket bodies in the cell of each type (excluding rockets decaying) (yr^(-1))
-        S_dout : array of rate of satellites de-orbiting from the cell of each type (yr^(-1))
         D_out : array of rate of satellites decaying from the cell of each type (yr^(-1))
         R_out : array of rate of rocket bodies decaying from the cell of each type (yr^(-1))
         N_out : matrix with the rate of exiting debris from each bin (yr^(-1))
@@ -513,64 +498,50 @@ class Cell:
         
         N_loc = self.N_bins[time]
         S_loc = self.S[time]
-        Sd_loc = self.S_d[time]
         D_loc = self.D[time]
         R_loc = self.R[time]
 
         # handle satellite-debris collisions
         dSdt = np.resize(N_loc, (self.num_sat_types, self.num_L, self.num_chi)) # collisions with live satallites
         dSdt = np.swapaxes(dSdt, 2, 0) # must be done temporairly for broadcasting
-        dS_ddt = np.array(dSdt) # collisions with de-orbiting satellites
         dDdt = np.array(dSdt) # collisions with derelict satellites
         dSdt *= self.sigma_sat_km*self.v_kyr*S_loc/self.V # compute rates of collision
-        dS_ddt *= self.sigma_sat_km*self.v_kyr*Sd_loc/self.V
         dDdt *= self.sigma_sat_km*self.v_kyr*D_loc/self.V
         dSdt[:,self.trackable,:] *= self.alpha_N # account for collision avoidance
-        dS_ddt[:,self.trackable,:] *= self.alpha_N
         dSdt = np.swapaxes(dSdt,0,2) # switch axes back
-        dS_ddt = np.swapaxes(dS_ddt,0,2) # switch axes back
         dDdt = np.swapaxes(dDdt,0,2) # switch axes back
 
         # handle satellite-satellite collisions
         S1 = np.resize(S_loc, (self.num_sat_types, self.num_sat_types))
         S2 = S1.transpose()
-        S_d1 = np.resize(Sd_loc, (self.num_sat_types, self.num_sat_types))
-        S_d2 = S_d1.transpose()
         D1 = np.resize(D_loc, (self.num_sat_types, self.num_sat_types))
         D2 = D1.transpose()
 
         # calculate collision rates
         dSSdt = self.alphaS1*self.alphaS2*self.sigma_comb_satsat*self.v_kyr*S1*S2/self.V
-        dSS_ddt = self.alphaS1*self.alphaS2*self.sigma_comb_satsat*self.v*S1*S_d2/self.V
         dSDdt = self.alphaD1*self.sigma_comb_satsat*self.v_kyr*S1*D2/self.V
-        dS_dS_ddt = self.alphaS1*self.alphaS2*self.sigma_comb_satsat*self.v_kyr*S_d1*S_d2/self.V
-        dS_dDdt = self.alphaD1*self.sigma_comb_satsat*self.v_kyr*S_d1*D2/self.V
         dDDdt = self.sigma_comb_satsat*self.v_kyr*D1*D2/self.V  # collisions cannot be avoided
 
         # compute collisions between satellites and rocket bodies
         S1 = np.resize(S_loc, (self.num_rb_types, self.num_sat_types)).transpose()
-        S_d1 = np.resize(Sd_loc, (self.num_rb_types, self.num_sat_types)).transpose()
         D1 = np.resize(D_loc, (self.num_rb_types, self.num_sat_types)).transpose()
         R2 = np.resize(R_loc, (self.num_sat_types, self.num_rb_types))
 
         # calculate collision rates
         dSRdt = self.alphaR1*self.sigma_comb_satrb*self.v_kyr*S1*R2/self.V
-        dS_dRdt = self.alphaR1*self.sigma_comb_satrb*self.v_kyr*S_d1*R2/self.V
         dDRdt = self.sigma_comb_satrb*self.v_kyr*D1*R2/self.V # collisions cannot be avoided
 
         # compute explosion rates for satellites
         expl_S = self.expl_rate_L*S_loc/100
-        expl_Sd = self.expl_rate_L*Sd_loc/100
         expl_D = self.expl_rate_D*D_loc/100
 
         # compute decay/ascend events for satellites
-        kill_S, deorbit_S, decay_D = S_loc/self.del_t, Sd_loc/self.tau_do, D_loc/self.tau_sat
+        kill_S, decay_D = S_loc/self.del_t, D_loc/self.tau_sat
 
         # diagonals are to account for objects of the same type colliding
-        dSdt_tot = self.lam_sat - kill_S - np.sum(dSdt, axis=(1,2)) - np.sum(dSSdt, axis=1) - np.sum(dSS_ddt, axis=1) - np.sum(dSDdt, axis=1) - np.diag(dSSdt) - np.sum(dSRdt, axis=1) - expl_S
-        dS_ddt_tot = self.P*kill_S - np.sum(dS_ddt, axis=(1,2)) - np.sum(dSS_ddt, axis=0) - np.sum(dS_dS_ddt, axis=1) - np.sum(dS_dDdt, axis=1) - np.diag(dS_dS_ddt) - np.sum(dS_dRdt, axis=1) - expl_Sd
-        dDdt_tot = (1-self.P)*kill_S - np.sum(dDdt, axis=(1,2), where=self.cat_sat_N) + np.sum(dSdt, axis=(1,2), where=self.cat_sat_N==False) + np.sum(dS_ddt, axis=(1,2), where=self.cat_sat_N==False) - np.sum(dSDdt, axis=0) - np.sum(dS_dDdt, axis=0) - np.sum(dDDdt, axis=1) - np.diag(dDDdt) - np.sum(dDRdt, axis=1) - expl_D
-        CS_dt = dSdt + dS_ddt + dDdt # total collisions between satellites and debris
+        dSdt_tot = self.lam_sat - kill_S - np.sum(dSdt, axis=(1,2)) - np.sum(dSSdt, axis=1) - np.sum(dSDdt, axis=1) - np.diag(dSSdt) - np.sum(dSRdt, axis=1) - expl_S
+        dDdt_tot = (1-self.P)*kill_S - np.sum(dDdt, axis=(1,2), where=self.cat_sat_N) + np.sum(dSdt, axis=(1,2), where=self.cat_sat_N==False) - np.sum(dSDdt, axis=0) - np.sum(dDDdt, axis=1) - np.diag(dDDdt) - np.sum(dDRdt, axis=1) - expl_D
+        CS_dt = dSdt + dDdt # total collisions between satellites and debris
 
         # handle rocket-debris collisions
         dRdt = np.resize(N_loc, (self.num_rb_types, self.num_L, self.num_chi)) # collisions with rockets
@@ -590,22 +561,21 @@ class Cell:
         decay_R = R_loc/self.tau_rb
 
         # sum everything up
-        dRdt_tot = self.lam_rb - np.sum(dRdt, axis=(1,2), where=self.cat_rb_N) - np.sum(dRRdt, axis=1) - np.diag(dRRdt) - np.sum(dSRdt, axis=0) - np.sum(dS_dRdt, axis=0) - np.sum(dDRdt, axis=0) - expl_R
+        dRdt_tot = self.lam_rb - np.sum(dRdt, axis=(1,2), where=self.cat_rb_N) - np.sum(dRRdt, axis=1) - np.diag(dRRdt) - np.sum(dSRdt, axis=0) - np.sum(dDRdt, axis=0) - expl_R
 
         # calculate decay rates for debris
         decay_N = N_loc/self.tau_N
 
         # set values to zero to avoid double-counting later on
-        dSSdt[self.double_count_filter_sat], dS_dS_ddt[self.double_count_filter_sat], dDDdt[self.double_count_filter_sat] = 0, 0, 0
-        dRRdt[self.double_count_filter_rb] = 0
+        dSSdt[self.double_count_filter_sat], dDDdt[self.double_count_filter_sat], dRRdt[self.double_count_filter_rb] = 0, 0, 0
 
         # compute return values
-        D_dt = dSSdt + dSS_ddt + dSDdt + dS_dS_ddt + dS_dDdt + dDDdt
-        RD_dt = dSRdt + dS_dRdt + dDRdt
-        expl_S_tot = expl_S + expl_Sd + expl_D
+        D_dt = dSSdt + dSDdt + dDDdt
+        RD_dt = dSRdt + dDRdt
+        expl_S_tot = expl_S + expl_D
 
         # return everything
-        return dSdt_tot, dS_ddt_tot, dDdt_tot, dRdt_tot, deorbit_S, decay_D, decay_R, decay_N, D_dt, RD_dt, dRRdt, CS_dt, dRdt, expl_S_tot, expl_R
+        return dSdt_tot, dDdt_tot, dRdt_tot, decay_D, decay_R, decay_N, D_dt, RD_dt, dRRdt, CS_dt, dRdt, expl_S_tot, expl_R
 
     def update_cat_N(self):
         '''
