@@ -8,7 +8,6 @@ atmosphere = NCell.load("test_save_Discrete/")
 
 t = atmosphere.get_t()
 S = atmosphere.get_S()[0][0]
-S_d = atmosphere.get_SD()[0][0]
 D = atmosphere.get_D()[0][0]
 N = atmosphere.get_N()[0]
 C = atmosphere.get_C()[0]
@@ -21,7 +20,6 @@ ax1.set_xlabel('time (yr)')
 ax1.set_ylabel('log(number)')
 ax1.set_yscale('log')
 ax1.plot(t, S, label='S')
-ax1.plot(t, S_d, label='S_d')
 ax1.plot(t, D, label='D')
 ax1.plot(t, N, label='N')
 ax1.set_ylim(100, 1e9)

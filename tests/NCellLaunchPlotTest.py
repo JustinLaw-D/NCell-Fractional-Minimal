@@ -6,7 +6,7 @@ import numpy as np
  
 atmosphere = NCell.load("./test_save_NLaunchFlow/")
 t = atmosphere.get_t()
-T = 10
+T = t[-1]
 S = atmosphere.get_S()
 
 import matplotlib.pyplot as plt

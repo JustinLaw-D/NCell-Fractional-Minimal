@@ -7,9 +7,9 @@ import numpy as np
 atmosphere = NCell.load('./test_save_2CellNTypeLaunch/')
 t = atmosphere.get_t()
 T = t[-1]
-S00, S10 = atmosphere.get_S()[0][0], atmosphere.get_S()[1][0]
-S01, S11 = atmosphere.get_S()[0][1], atmosphere.get_S()[1][1]
-S02, S12 = atmosphere.get_S()[0][2], atmosphere.get_S()[1][2]
+S00, S10 = atmosphere.get_D()[0][0], atmosphere.get_S()[1][0]
+S01, S11 = atmosphere.get_D()[0][1], atmosphere.get_S()[1][1]
+S02, S12 = atmosphere.get_D()[0][2], atmosphere.get_S()[1][2]
 
 import matplotlib.pyplot as plt
 

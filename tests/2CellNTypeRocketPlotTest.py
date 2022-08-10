@@ -23,8 +23,8 @@ ax1.plot(t, R01, label='R01')
 ax1.plot(t, R11, label='R11')
 ax1.plot(t, R02, label='R02')
 ax1.plot(t, R12, label='R12')
-ax1.set_ylim(1, 200)
-ax1.set_xlim(0,T)
+ax1.set_ylim(1, 1e3)
+ax1.set_xlim(0,20)
 ax1.legend()
 
 fig.tight_layout()  # otherwise the right y-label is slightly clipped

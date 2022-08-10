@@ -747,7 +747,6 @@ class NCell:
                 curr_cell = self.cells[i]
                 # get old values
                 old_S = curr_cell.S[self.time+1]
-                old_Sd = curr_cell.S_d[self.time+1]
                 old_D = curr_cell.D[self.time+1]
                 old_R = curr_cell.R[self.time+1]
                 old_N = curr_cell.N_bins[self.time+1]
@@ -901,22 +900,21 @@ class NCell:
         for i in range(self.num_cells):
 
             curr_cell = self.cells[i]
-            dS, dS_d, dD = np.zeros(curr_cell.num_sat_types), np.zeros(curr_cell.num_sat_types), np.zeros(curr_cell.num_sat_types)
+            dS, dD = np.zeros(curr_cell.num_sat_types), np.zeros(curr_cell.num_sat_types)
             dR = np.zeros(curr_cell.num_rb_types)
             dN_loc = np.zeros((self.num_L, self.num_chi)) # debris change from non-collision sources
             coll_list = []
             expl_list = []
-            S, S_d, D, R = curr_cell.S[self.time], curr_cell.S_d[self.time], curr_cell.D[self.time], curr_cell.R[self.time]
+            S, D, R = curr_cell.S[self.time], curr_cell.D[self.time], curr_cell.R[self.time]
             N = curr_cell.N_bins[self.time]
 
             for event in curr_cell.event_list: # iterate through possible events
 
                 if event.time is not None: # events at specific times
                     while event.time != [] and (event.time[0] <= self.t[self.time]):
-                        dS_temp, dS_d_temp, dD_temp, dR_temp, dN_loc_temp, coll_temp, expl_temp = event.run_event(S, S_d, D, R, N, self.logL_edges, self.chi_edges)
+                        dS_temp, dD_temp, dR_temp, dN_loc_temp, coll_temp, expl_temp = event.run_event(S, D, R, N, self.logL_edges, self.chi_edges)
                         event.time.pop(0)
                         dS += dS_temp
-                        dS_d += dS_d_temp
                         dD += dD_temp
                         dR += dR_temp
                         dN_loc += dN_loc_temp
@@ -924,19 +922,18 @@ class NCell:
                         expl_list.extend(expl_temp)
 
                 if event.freq is not None: # events occuring at specific frequencies
-                    if self.t[self.time] - event.last_event <= 1/event.freq:
-                        dS_temp, dS_d_temp, dD_temp, dR_temp, dN_loc_temp, coll_temp, expl_temp = event.run_event(S, S_d, D, R, N, self.logL_edges, self.chi_edges)
+                    if self.t[self.time] - event.last_event >= 1/event.freq:
+                        dS_temp, dD_temp, dR_temp, dN_loc_temp, coll_temp, expl_temp = event.run_event(S, D, R, N, self.logL_edges, self.chi_edges)
                         dS += dS_temp
-                        dS_d += dS_d_temp
                         dD += dD_temp
                         dR += dR_temp
                         dN_loc += dN_loc_temp
                         coll_list.extend(coll_temp)
                         expl_list.extend(expl_temp)
+                        event.last_event = self.t[self.time]
 
                 # update values
                 curr_cell.S[self.time] += dS
-                curr_cell.S_d[self.time] += dS_d
                 curr_cell.D[self.time] += dD
                 curr_cell.R[self.time] += dR
                 curr_cell.N_bins[self.time] += dN_loc

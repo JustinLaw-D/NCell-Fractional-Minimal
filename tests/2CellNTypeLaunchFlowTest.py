@@ -9,14 +9,11 @@ alt_edges = [587.5, 612.5, 637.5]
 dh = 25 # height of bands (km)
 V1, V2 = 4*np.pi*dh*(R+alt1)**2, 4*np.pi*dh*(R+alt2)**2 # volume of bands
 S_i = [[0,0,0],[0,0,0]]
-S_di = [[0,0,0],[0,0,0]]
 D_i = [[0,0,0],[0,0,0]]
 N_i1, N_i2 = int(0), int(0)
-lam = [50,100,200]
-up_time = [[0.5,0.5,0.5],[0,0,0]]
-target_alts = [alt2,alt2,alt2]
+lam = [[0,0,0],[50,100,200]]
 T = 50
-atmosphere = NCell(S_i, S_di, D_i, [N_i1, N_i2], target_alts, alt_edges, lam, up_time=up_time)
+atmosphere = NCell(S_i, D_i, [N_i1, N_i2], alt_edges, lam)
 
-atmosphere.run_sim_precor(T, upper=False)
+atmosphere.run_sim_euler(T, dt=0.001, upper=False)
 atmosphere.save('./', 'test_save_2CellNTypeLaunch', gap=0.01)
