@@ -28,6 +28,7 @@
 import requests
 import json
 import configparser
+import time
 
 class MyError(Exception):
     def __init___(self,args):
@@ -88,4 +89,6 @@ with requests.Session() as session:
         json.dump(data, file)
 
     session.close()
-print("Completed Download") 
+print("Completed Download")
+with open('satellite_data_update_time.txt', 'w') as wf:
+    wf.write(time.asctime(time.gmtime()))
