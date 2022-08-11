@@ -16,7 +16,7 @@ Me = 5.97219e24 # mass of Earth (kg)
 
 class NCell:
 
-    def __init__(self, S, D, N_c, alt_edges, lam, update_period=1/12, min_lifetime=0, CD=2.2, m0=0, min_dt=0, 
+    def __init__(self, S, D, N_c, alt_edges, lam, update_period=1/12, min_lifetime=1e-4, CD=2.2, m0=0, min_dt=0, 
                  max_dt=0.1, dtfactor=1/100, t_max=np.inf, setF107=None, events=[], R_i=None, lam_rb=None, del_t=None, 
                  expl_rate_L=None, expl_rate_D=None, C_sat=None, sigma_sat=None, expl_rate_R=None, C_rb=None, sigma_rb=None, 
                  v=None, delta=None, alphaS=None, alphaD=None, alphaN=None, alphaR=None, P=None, m_s=None, m_rb=None, AM_sat=None, 
@@ -33,7 +33,7 @@ class NCell:
 
         Keyword Parameter(s):
         update_period : how often the drag lifetimes are updated (yr, default 1/12)
-        min_lifetime : minimum decay lifetime to allow for debris (yr, default 0)
+        min_lifetime : minimum decay lifetime to allow for debris (yr, default 1e-4, cannot be 0)
         CD : drag coefficient for objects (default 2.2)
         m0 : starting month of the solar cycle (default 0)
         min_dt : minimum timestep for calculating decay lifetimes (yr, default 0)
@@ -239,8 +239,8 @@ class NCell:
                     AM_sat[j] = 1/(20*2.2)
 
                 # compute atmospheric drag lifetime for satallites in the shell
-                tau = max(drag_lifetime(self.alts[i] + self.dhs[i]/2, self.alts[i] - self.dhs[i]/2, AM_sat[j], CD, 1/365.25, m0,
-                                        min_dt, max_dt, dtfactor, t_max, setF107), self.min_lifetime)
+                tau = drag_lifetime(self.alts[i] + self.dhs[i]/2, self.alts[i] - self.dhs[i]/2, AM_sat[j], CD, self.min_lifetime, 
+                                    m0, min_dt, max_dt, dtfactor, t_max, setF107)
                 S_cell[j] = S[i][j]
                 D_cell[j] = D[i][j]
                 m_sat_cell[j] = m_s[j]
@@ -285,8 +285,8 @@ class NCell:
                     AM_rb[j] = 1/(20*2.2)
 
                 # compute atmospheric drag lifetime for rocket bodies in the shell
-                tau = max(drag_lifetime(self.alts[i] + self.dhs[i]/2, self.alts[i] - self.dhs[i]/2, AM_rb[j], CD, 1/365.25, m0,
-                                        min_dt, max_dt, dtfactor, t_max, setF107), self.min_lifetime)
+                tau = drag_lifetime(self.alts[i] + self.dhs[i]/2, self.alts[i] - self.dhs[i]/2, AM_rb[j], CD, self.min_lifetime, 
+                                    m0, min_dt, max_dt, dtfactor, t_max, setF107)
                 R_cell[j] = R_i[i][j]
                 lam_rb_cell[j] = lam_rb[i][j]
                 m_rb_cell[j] = m_rb[j]
@@ -312,8 +312,8 @@ class NCell:
                     bin_L += N_c[i]*delta[i]*(L_cdf(10**bin_top_L, L_min, 1e-1, 'expl') - L_cdf(10**bin_bot_L, L_min, 1e-1, 'expl'))
                 N_initial[j,0] = bin_L # put everything in the lowest A/M bin
             for j in range(self.num_chi):
-                tau_N[j] = max(drag_lifetime(self.alts[i] + self.dhs[i]/2, self.alts[i] - self.dhs[i]/2, self.AM_ave[j], CD, 1/365.25, 
-                                             m0, min_dt, max_dt, dtfactor, t_max, setF107), self.min_lifetime)
+                tau_N[j] = drag_lifetime(self.alts[i] + self.dhs[i]/2, self.alts[i] - self.dhs[i]/2, self.AM_ave[j], CD, 
+                                         self.min_lifetime, m0, min_dt, max_dt, dtfactor, t_max, setF107)
 
             # figure out which events are in this cell
             events_loc = []
@@ -1001,14 +1001,14 @@ class NCell:
             alt = curr_cell.alt
             dh = curr_cell.dh
             for j in range(self.num_sat_types): # handle satellites
-                curr_cell.tau_sat[j] = max(drag_lifetime(alt+dh/2, alt-dh/2, curr_cell.AM_sat[j], self.CD, 1/365.25, self.m0 + t*12, 
-                                                         self.min_dt, self.max_dt, self.dtfactor, self.t_max, self.setF107), self.min_lifetime)
+                curr_cell.tau_sat[j] = drag_lifetime(alt+dh/2, alt-dh/2, curr_cell.AM_sat[j], self.CD, self.min_lifetime, self.m0 + t*12, 
+                                                     self.min_dt, self.max_dt, self.dtfactor, self.t_max, self.setF107)
             for j in range(self.num_rb_types): # handle rockets
-                curr_cell.tau_rb[j] = max(drag_lifetime(alt+dh/2, alt-dh/2, curr_cell.AM_rb[j], self.CD, 1/365.25, self.m0 + t*12, 
-                                                        self.min_dt, self.max_dt, self.dtfactor, self.t_max, self.setF107), self.min_lifetime)
+                curr_cell.tau_rb[j] = drag_lifetime(alt+dh/2, alt-dh/2, curr_cell.AM_rb[j], self.CD, self.min_lifetime, self.m0 + t*12, 
+                                                    self.min_dt, self.max_dt, self.dtfactor, self.t_max, self.setF107)
             for j in range(self.num_chi): # handle debris
-                curr_cell.tau_N[j] = max(drag_lifetime(alt+dh/2, alt-dh/2, curr_cell.AM_ave[j], self.CD, 1/365.25, self.m0 + t*12, 
-                                                       self.min_dt, self.max_dt, self.dtfactor, self.t_max, self.setF107), self.min_lifetime)
+                curr_cell.tau_N[j] = drag_lifetime(alt+dh/2, alt-dh/2, curr_cell.AM_ave[j], self.CD, self.min_lifetime, self.m0 + t*12, 
+                                                   self.min_dt, self.max_dt, self.dtfactor, self.t_max, self.setF107)
 
     def get_t(self):
         '''
