@@ -101,7 +101,7 @@ class NCell:
         if lam_rb is None:
             lam_rb = [None]*self.num_cells
         if v is None:
-            v = [10]*self.num_cells
+            v = [None]*self.num_cells
         if delta is None:
             delta = [10]*self.num_cells
         if alphaS is None:

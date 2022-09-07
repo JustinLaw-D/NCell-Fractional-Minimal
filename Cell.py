@@ -28,7 +28,7 @@ class Cell:
         alt : altitude of the shell centre (km)
         dh : width of the shell (km)
         tau_N : 2-d array of atmospheric drag lifetimes for debris (yr)
-        v : relative collision speed (km/s)
+        v : relative collision speed (km/s, or None)
         m_sat : mass of each satellite type (kg)
         sigma_sat : collision cross-section of each satellite type (m^2)
         del_t : mean satellite lifetime of each type (yr)
@@ -101,9 +101,12 @@ class Cell:
         self.dh = dh
         self.V = 4*np.pi*((6371 + self.alt)**2)*self.dh # volume of the shell
         self.tau_N = tau_N
-        self.v = v
-        self.v_kyr = self.v*365.25*24*60*60 # convert to km/yr
         self.v_orbit = np.sqrt(G*Me/((Re + alt)*1000))/1000 # orbital velocity in km/s
+        if v is None:
+            self.v = (4/3)*self.v_orbit
+        else:
+            self.v = v
+        self.v_kyr = self.v*365.25*24*60*60 # convert to km/yr
         self.logL_edges = logL_edges
         self.num_L = len(logL_edges) - 1
         self.logL_ave = np.zeros(self.num_L) # average logL value in each bin

@@ -140,7 +140,8 @@ delta : initial ratio of the density of disabling to catestrophic debris in each
 Other Parameters:
 
 The default value of num_dir was tuned to be as restrictive as possible
-without losing precision, it's not recommended that you change it.
+without losing precision, it's not recommended that you change it. v is calculated
+based on the altitude of the shell by default.
 
 num_dir : number of random directions to sample in creating probability tables
 
